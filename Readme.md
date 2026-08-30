@@ -4,6 +4,37 @@
 Пользователь для миграций migrator
 DB_HOST: 51.250.83.56
 
+## Создание БД store
+
+### Шаг 2. Создайте ещё одну БД в PostgreSQL, допустим, это будет база store. 
+
+CREATE DATABASE store;
+
+### Шаг 3. Создайте нового пользователя PostgreSQL и выдайте ему права на все таблицы в базе store. Под этим логином будут ходить автотесты и выполняться миграции, поэтому важно выдать достаточные для этой работы права. Укажите выполненные для этого запросы в файле репозитория Readme.md.
+
+CREATE USER migrator WITH PASSWORD 'migrator_password';
+
+GRANT CONNECT ON DATABASE store TO migrator;
+GRANT ALL PRIVILEGES ON DATABASE store TO migrator;
+
+\c store;
+
+-- Даем права на схему public
+GRANT ALL PRIVILEGES ON SCHEMA public TO migrator;
+
+-- Устанавливаем права по умолчанию для будущих объектов
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO migrator;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON SEQUENCES TO migrator;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON FUNCTIONS TO migrator;
+
+-- Проверка, что подключение успешно
+
+psql "host=localhost port=5432 dbname=store user=migrator"
+
+Удалённо также проверил через DBeaver
+
+
+
 ## Аналитический запрос: количество проданных сосисок за предыдущую неделю
 
 ### Запрос

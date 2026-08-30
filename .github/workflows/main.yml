@@ -9,7 +9,9 @@ jobs:
   migrate:
     runs-on: ubuntu-latest
     env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+      # Отладка ворнинга Warning: Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4.
+      # FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
       - name: Checkout repository
@@ -37,14 +39,12 @@ jobs:
                  -password=${{ secrets.DB_PASSWORD }} \
                  info
 
-      ### Этот шаг оставьте без изменений
       - name: Download and setup autotests binaries
         run: |
           wget -qO- cloud-services-engineer.gitlab.yandexcloud.net/practicum-cloud-services/dbops-autotests/-/package_files/1/download > dbopstest
           chmod +x ./dbopstest
           mv ./dbopstest /usr/local/bin/dbopstest
 
-      ### Этот шаг оставьте без изменений
       - name: Test
         run: |
           dbopstest \
