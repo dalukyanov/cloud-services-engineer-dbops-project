@@ -1,52 +1,63 @@
 name: Main workflow
+
 on:
   push:
     branches:
       - main
+
 jobs:
   migrate:
     runs-on: ubuntu-latest
+
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      # Шаг 1: Проверка кода репозитория (обновлен до v4)
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        # Подавляем предупреждение о Node.js 20, т.к. действие пока использует его
+        env:
+          ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
 
-    #### Добавьте шаг с Flyway-миграциями
-    - name: Install Flyway
-      run: |
-        wget -qO- https://download.red-gate.com/maven/release/com/redgate/flyway/flyway-commandline/10.10.0/flyway-commandline-10.10.0-linux-x64.tar.gz | tar xvz
-        sudo ln -s $(pwd)/flyway-10.10.0/flyway /usr/local/bin/flyway
-        flyway -version
+      # Шаг 2: Установка Flyway (обязательно перед запуском миграций)
+      - name: Install Flyway
+        run: |
+          # Скачиваем и распаковываем последнюю стабильную версию Flyway
+          wget -qO- https://download.red-gate.com/maven/release/com/redgate/flyway/flyway-commandline/10.10.0/flyway-commandline-10.10.0-linux-x64.tar.gz | tar xvz
+          # Создаем символическую ссылку для доступа к команде flyway из любого места
+          sudo ln -s $(pwd)/flyway-10.10.0/flyway /usr/local/bin/flyway
+          # Проверяем установку и выводим версию в лог
+          flyway -version
 
-    - name: Run Flyway migrations
-      run: |
-        flyway -url=jdbc:postgresql://${{ secrets.DB_HOST }}:${{ secrets.DB_PORT }}/${{ secrets.DB_NAME }} \
-               -user=${{ secrets.DB_USER }} \
-               -password=${{ secrets.DB_PASSWORD }} \
-               -locations=filesystem:./migrations \
-               -baselineOnMigrate=true \
-               migrate
+      # Шаг 3: Запуск миграций Flyway
+      - name: Run Flyway migrations
+        run: |
+          flyway -url=jdbc:postgresql://${{ secrets.DB_HOST }}:${{ secrets.DB_PORT }}/${{ secrets.DB_NAME }} \
+                 -user=${{ secrets.DB_USER }} \
+                 -password=${{ secrets.DB_PASSWORD }} \
+                 -locations=filesystem:./migrations \
+                 -baselineOnMigrate=true \
+                 migrate
 
-    - name: Show migration info
-      run: |
-        flyway -url=jdbc:postgresql://${{ secrets.DB_HOST }}:${{ secrets.DB_PORT }}/${{ secrets.DB_NAME }} \
-               -user=${{ secrets.DB_USER }} \
-               -password=${{ secrets.DB_PASSWORD }} \
-               info
+      # Шаг 4: Дополнительно - вывод информации о состоянии миграций (для отладки)
+      - name: Show migration info
+        run: |
+          flyway -url=jdbc:postgresql://${{ secrets.DB_HOST }}:${{ secrets.DB_PORT }}/${{ secrets.DB_NAME }} \
+                 -user=${{ secrets.DB_USER }} \
+                 -password=${{ secrets.DB_PASSWORD }} \
+                 info
 
-    ### Этот шаг оставьте без изменений
-    - name: Download and setup autotests binaries
-      run: |
-        wget -qO- cloud-services-engineer.gitlab.yandexcloud.net/practicum-cloud-services/dbops-autotests/-/package_files/1/download > dbopstest
-        chmod +x ./dbopstest
-        mv ./dbopstest /usr/local/bin/dbopstest
+      ### Следующие шаги ОСТАВЛЯЕМ БЕЗ ИЗМЕНЕНИЙ (они предоставлены Практикумом)
+      - name: Download and setup autotests binaries
+        run: |
+          wget -qO- cloud-services-engineer.gitlab.yandexcloud.net/practicum-cloud-services/dbops-autotests/-/package_files/1/download > dbopstest
+          chmod +x ./dbopstest
+          mv ./dbopstest /usr/local/bin/dbopstest
 
-    ### Этот шаг оставьте без изменений
-    - name: Test
-      run: |
-        dbopstest \
-          -test.v \
-          -host=${{ secrets.DB_HOST }} \
-          -port=${{ secrets.DB_PORT }} \
-          -user=${{ secrets.DB_USER }} \
-          -password=${{ secrets.DB_PASSWORD }} \
-          -db=${{ secrets.DB_NAME }}
+      - name: Test
+        run: |
+          dbopstest \
+            -test.v \
+            -host=${{ secrets.DB_HOST }} \
+            -port=${{ secrets.DB_PORT }} \
+            -user=${{ secrets.DB_USER }} \
+            -password=${{ secrets.DB_PASSWORD }} \
+            -db=${{ secrets.DB_NAME }}
