@@ -10,25 +10,17 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
     steps:
-      # Шаг 1: Проверка кода репозитория (обновлен до v4)
       - name: Checkout repository
         uses: actions/checkout@v4
-        # Подавляем предупреждение о Node.js 20, т.к. действие пока использует его
-        env:
-          ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
 
-      # Шаг 2: Установка Flyway (обязательно перед запуском миграций)
       - name: Install Flyway
         run: |
-          # Скачиваем и распаковываем последнюю стабильную версию Flyway
           wget -qO- https://download.red-gate.com/maven/release/com/redgate/flyway/flyway-commandline/10.10.0/flyway-commandline-10.10.0-linux-x64.tar.gz | tar xvz
-          # Создаем символическую ссылку для доступа к команде flyway из любого места
           sudo ln -s $(pwd)/flyway-10.10.0/flyway /usr/local/bin/flyway
-          # Проверяем установку и выводим версию в лог
-          flyway -version
+          flyway --version
 
-      # Шаг 3: Запуск миграций Flyway
       - name: Run Flyway migrations
         run: |
           flyway -url=jdbc:postgresql://${{ secrets.DB_HOST }}:${{ secrets.DB_PORT }}/${{ secrets.DB_NAME }} \
@@ -38,7 +30,6 @@ jobs:
                  -baselineOnMigrate=true \
                  migrate
 
-      # Шаг 4: Дополнительно - вывод информации о состоянии миграций (для отладки)
       - name: Show migration info
         run: |
           flyway -url=jdbc:postgresql://${{ secrets.DB_HOST }}:${{ secrets.DB_PORT }}/${{ secrets.DB_NAME }} \
@@ -46,13 +37,14 @@ jobs:
                  -password=${{ secrets.DB_PASSWORD }} \
                  info
 
-      ### Следующие шаги ОСТАВЛЯЕМ БЕЗ ИЗМЕНЕНИЙ (они предоставлены Практикумом)
+      ### Этот шаг оставьте без изменений
       - name: Download and setup autotests binaries
         run: |
           wget -qO- cloud-services-engineer.gitlab.yandexcloud.net/practicum-cloud-services/dbops-autotests/-/package_files/1/download > dbopstest
           chmod +x ./dbopstest
           mv ./dbopstest /usr/local/bin/dbopstest
 
+      ### Этот шаг оставьте без изменений
       - name: Test
         run: |
           dbopstest \
