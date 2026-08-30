@@ -1,17 +1,23 @@
 # dbops-project
-Исходный репозиторий для выполнения проекта дисциплины "DBOps"
 
+# Проектная работа дисциплины DBOps
+
+```
 Пользователь для миграций migrator
 DB_HOST: 51.250.83.56
+```
 
 ## Создание БД store
 
 ### Шаг 2. Создайте ещё одну БД в PostgreSQL, допустим, это будет база store. 
 
+```sql
 CREATE DATABASE store;
+```
 
 ### Шаг 3. Создайте нового пользователя PostgreSQL и выдайте ему права на все таблицы в базе store. Под этим логином будут ходить автотесты и выполняться миграции, поэтому важно выдать достаточные для этой работы права. Укажите выполненные для этого запросы в файле репозитория Readme.md
 
+```sql
 CREATE USER migrator WITH PASSWORD 'migrator_password';
 
 GRANT CONNECT ON DATABASE store TO migrator;
@@ -26,10 +32,13 @@ GRANT ALL PRIVILEGES ON SCHEMA public TO migrator;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO migrator;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON SEQUENCES TO migrator;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON FUNCTIONS TO migrator;
+```
 
--- Проверка, что подключение успешно
+Проверка, что подключение успешно
 
+```
 psql "host=localhost port=5432 dbname=store user=migrator"
+```
 
 Удалённо также проверил через DBeaver
 
@@ -50,8 +59,10 @@ WHERE o.status = 'shipped'
     AND o.date_created > NOW() - INTERVAL '7 DAY'
 GROUP BY o.date_created
 ORDER BY o.date_created DESC;
+```
 
 Его план выполнения не самый оптимальный. Присутствуют Parallel Seq Scan (по сути полное чтение таблицы), всё это собирается в несколько потоков воркерами. Стоимость 266к, 32.40 сек
+
 ```
 |QUERY PLAN                                                                                                                                                          |
 |--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -88,10 +99,10 @@ ORDER BY o.date_created DESC;
 ```
 
 
-
 ## Оптимизация запроса с помощью индексов
 
 ### 1. Запрос для оптимизации
+
 ```sql
 SELECT 
     o.date_created, 
@@ -102,7 +113,7 @@ WHERE o.status = 'shipped'
     AND o.date_created > NOW() - INTERVAL '7 DAY'
 GROUP BY o.date_created
 ORDER BY o.date_created DESC;
-
+```
 
 ```
 |QUERY PLAN                                                                                                                                                                      |
