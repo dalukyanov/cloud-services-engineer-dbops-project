@@ -8,7 +8,8 @@ on:
 jobs:
   migrate:
     runs-on: ubuntu-latest
-
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
       # Шаг 1: Проверка кода репозитория (обновлен до v4)
       - name: Checkout repository
